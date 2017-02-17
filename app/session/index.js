@@ -9,7 +9,7 @@ const db = require('../db');
 
 if (process.env.NODE_ENV === 'production') {
     module.exports = session({
-        secret: cosnfig.sessionSecret,
+        secret: config.sessionSecret,
         resave: false,
         saveUninitialized: false,
         store: new MongoStore({
