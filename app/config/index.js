@@ -2,6 +2,7 @@
  * Created by Shivaji on 15/2/17.
  */
 'use strict';
+const logger = require('../logger');
 
 if (process.env.NODE_ENV === 'production') {
 
@@ -9,6 +10,10 @@ if (process.env.NODE_ENV === 'production') {
 
     let redisURI = require('url').parse(process.env.REDIS_URL);
     let redisPassword = redisURI.auth.split(':')[1];
+    logger.log('debug', 'Redis URI is ----> ' + redisURI);
+    logger.log('debug', 'Redis Password is ----> ' + redisPassword);
+    logger.log('debug', 'Redis Host Name is ----> ' + redisURI.hostname);
+    logger.log('debug', 'Redis Port is ----> ' + redisURI.port);
     module.exports = {
         host: process.env.host || "",
         dbURI: process.env.dbURI || "",
