@@ -26,7 +26,8 @@ if (process.env.NODE_ENV === 'production') {
                 "id",
                 "displayName",
                 "photos"
-            ]
+            ],
+            "enableProof": true
         },
         "twitter": {
             "consumerKey": process.env.twConsumerKey,

@@ -11,5 +11,7 @@
     <orderEntry type="library" name="express-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="ejs-DefinitelyTyped" level="application" />
     <orderEntry type="library" name="all" level="application" />
+    <orderEntry type="library" name="passport-DefinitelyTyped" level="application" />
+    <orderEntry type="library" name="passport-strategy-DefinitelyTyped" level="application" />
   </component>
 </module>
