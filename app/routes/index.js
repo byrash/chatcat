@@ -5,7 +5,6 @@
 const h = require('../helpers');
 const passport = require('passport');
 const config = require('../config');
-const logger = require('../logger');
 
 module.exports = () => {
     let routes = {
@@ -34,22 +33,10 @@ module.exports = () => {
                 }
             }],
             '/auth/facebook': passport.authenticate('facebook'),
-            '/auth/facebook/callback': (req, res, next) => {
-                return passport.authenticate('facebook',
-                    {
-                        successRedirect: '/rooms',
-                        failureRedirect: '/'
-                    },
-                    (err, user, info) => {
-                        if (err) {
-                            logger.error('#$%^&*()#$%^&*() ---> ' + err);
-                            res.redirect('/');
-                        }
-                        else {
-                            next();
-                        }
-                    });
-            },
+            '/auth/facebook/callback': passport.authenticate('facebook', {
+                successRedirect: '/rooms',
+                failureRedirect: '/'
+            }),
             '/auth/twitter': passport.authenticate('twitter'),
             '/auth/twitter/callback': passport.authenticate('twitter', {
                 successRedirect: '/rooms',
