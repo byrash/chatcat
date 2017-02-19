@@ -4,11 +4,11 @@
 'use strict';
 const config = require('../config');
 const Mongoose = require('mongoose').connect(config.dbURI);
-const logger = require('../logger');
+const l = require('../logger');
 
 Mongoose.Promise = global.Promise;
 Mongoose.connection.on('error', error => {
-    logger.log('error', 'Mongoose failed with error ' + error);
+    l.error('Mongoose failed with error ', error);
 })
 
 //Create a schema that defines the structure for storing use data

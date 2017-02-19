@@ -2,7 +2,7 @@
  * Created by Shivaji on 15/2/17.
  */
 'use strict';
-const logger = require('../logger');
+const l = require('../logger');
 
 if (process.env.NODE_ENV === 'production') {
 

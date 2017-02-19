@@ -5,7 +5,7 @@
 const h = require('../helpers');
 const passport = require('passport');
 const config = require('../config');
-const logger = require('../logger');
+const l = require('../logger');
 
 module.exports = () => {
     let routes = {
@@ -32,7 +32,7 @@ module.exports = () => {
                             roomId: room.roomId
                         });
                     }
-                }).catch(err => logger.log('error', 'Erro getting room ' + err));
+                }).catch(err => l.error('Erro getting room ', err));
             }],
             '/auth/facebook': passport.authenticate('facebook'),
             '/auth/facebook/callback': passport.authenticate('facebook', {

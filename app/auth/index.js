@@ -8,7 +8,7 @@ const config = require('../config');
 const FacebookStrategy = require('passport-facebook').Strategy;
 const TwitterStrategy = require('passport-twitter').Strategy;
 const h = require('../helpers');
-const logger = require('../logger');
+const l = require('../logger');
 
 module.exports = () => {
 
@@ -21,7 +21,7 @@ module.exports = () => {
         h.findById(id)
             .then(user => done(null, user))
             .catch(error =>
-                logger.log('error', 'Error when deserializing the user ' + error)
+                l.error('Error when deserializing the user ', error)
             );
     });
 
@@ -37,7 +37,7 @@ module.exports = () => {
                             done(null, newChatUser)
                         )
                         .catch(error =>
-                            logger.log('error', 'Error creating user ' + error)
+                            l.error('Error creating user ', error)
                         );
 
                 }

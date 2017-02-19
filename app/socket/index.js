@@ -3,7 +3,7 @@
  */
 'use strict';
 const h = require('../helpers');
-const logger = require('../logger');
+const l = require('../logger');
 
 module.exports = (io, app) => {
     // let allrooms = app.locals.chatrooms;
@@ -20,7 +20,7 @@ module.exports = (io, app) => {
         socket.on('getChatrooms', () => {
             h.getAllRooms().then(allRooms => {
                 socket.emit('chatRoomsList', JSON.stringify(allRooms));
-            }).catch(err => logger.log('error', 'Error getting all rooms ' + err));
+            }).catch(err => l.error('Error getting all rooms ', err));
         });
 
         socket.on('createNewRoom', newRoomInput => {

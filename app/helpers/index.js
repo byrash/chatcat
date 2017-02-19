@@ -5,7 +5,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const crypto = require('crypto');
-const logger = require('../logger');
+const l = require('../logger');
 
 // Registers Routes
 let _registerRoutes = (routes, method) => {
@@ -104,41 +104,42 @@ let findRoomById = (roomId) => {
 
 let addUserToRoom = (data, socket, callback) => {
 
-    if (data) {
-        findRoomById(data.roomId).then(result => {
+    findRoomById(data.roomId).then(result => {
 
-            if (result) {
-                //Room exists already so add user
-                //Get the active user id
-                let userId = socket.request.session.passport.user;
-                let checkUser = result.users.findIndex((element, index, array) => {
-                    if (element.userId === userId) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
-                if (checkUser > -1) {
-                    result.users.splice(checkUser, 1);
-                }
-                result.users.push({
-                    socketId: socket.id,
-                    userId,
-                    user: data.user,
-                    userPic: data.userPic
-                });
-                db.roomsModel.update({"roomId": data.roomId}, {$set: {"users": result.users}}, (err, updateResult) => {
-                    if (!err) {
-                        socket.join(data.roomId);
-                        callback(data.roomId, socket, result.users);
-                    } else {
-                        logger.log('error', 'Error saving users --> ' + err)
-                    }
-                });
+        if (result) {
+            //Room exists already so add user
+            //Get the active user id
+            let userId = '';
+            if (socket.request.session.passport) {
+                userId = socket.request.session.passport.user;
             }
+            let checkUser = result.users.findIndex((element, index, array) => {
+                if (element.userId === userId) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+            if (checkUser > -1) {
+                result.users.splice(checkUser, 1);
+            }
+            result.users.push({
+                socketId: socket.id,
+                userId,
+                user: data.user,
+                userPic: data.userPic
+            });
+            db.roomsModel.update({"roomId": data.roomId}, {$set: {"users": result.users}}, (err, updateResult) => {
+                if (!err) {
+                    socket.join(data.roomId);
+                    callback(data.roomId, socket, result.users);
+                } else {
+                    l.error('Error saving users --> ', err)
+                }
+            });
+        }
 
-        }).catch(err => logger.log('error', 'Error finding room ' + err));
-    }
+    }).catch(err => l.error('Error finding room ', err));
 }
 
 
@@ -168,7 +169,7 @@ let removeUserFromRoom = (socket, callback) => {
                     if (!err) {
                         callback(room.roomId, socket, room.users);
                     } else {
-                        logger.log('error', 'Failed to update user list ' + err);
+                        l.error('Failed to update user list ', err);
                     }
                 });
 
@@ -176,14 +177,14 @@ let removeUserFromRoom = (socket, callback) => {
 
         }
 
-    }).catch(err => logger.log('error', 'Error getting rooms ' + err));
+    }).catch(err => l.error('Error getting rooms ', err));
 
 }
 
 let addNewRoom = (newRoomIn, socket, callback) => {
     let roomInDB = db.roomsModel.findOne({"room": newRoomIn}, (err, results) => {
         if (err) {
-            logger.log('error', 'Error finding room --> ' + err);
+            l.error('Error finding room --> ', err);
         } else if (!results) {
             //Room Does not exists
             //Create a new one
@@ -194,12 +195,12 @@ let addNewRoom = (newRoomIn, socket, callback) => {
             });
             newRoom.save(err => {
                 if (!err) {
-                    logger.log('info', 'New room saved succesfully..!!! ');
+                    l.info('New room saved succesfully..!!! ');
                     getAllRooms().then(results => {
                         callback(socket, results)
-                    }).catch(err => logger.log('error', 'Unable to get all rooms ' + err));
+                    }).catch(err => l.error('Unable to get all rooms ' + err));
                 } else {
-                    logger.log('error', 'New room not saved..!!! ');
+                    l.error('New room not saved..!!! ');
                 }
             });
         }
