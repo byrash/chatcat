@@ -20,7 +20,7 @@
                 let roomsListDiv = $('#roomsListUL');
                 let listStr = '';
                 for (let cat of chatrooms) {
-                    // Do rem ES6 remplate lietrsl like ${XYZ} worksonly with backticks like `
+                    // Do rem ES6 template literal like ${XYZ} works only with backticks like `
                     listStr += `<a href="/chat/${cat.roomId}"><li>${cat.room}</li></a>`;
                 }
                 roomsListDiv.html('').append(listStr);
@@ -31,13 +31,12 @@
 
             // Event listener
             socket.on('chatRoomsList', chatrooms => {
+                console.log(chatrooms);
                 renderChatRooms(JSON.parse(chatrooms));
             });
 
 
             $('#createBtn').on('click', () => {
-                console.log(newRoomInput);
-                console.log(newRoomInput.html());
                 if (newRoomInput.val() !== '') {
                     socket.emit('createNewRoom', newRoomInput.val());
                     newRoomInput.val('');

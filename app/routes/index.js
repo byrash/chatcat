@@ -5,6 +5,7 @@
 const h = require('../helpers');
 const passport = require('passport');
 const config = require('../config');
+const logger = require('../logger');
 
 module.exports = () => {
     let routes = {
@@ -20,17 +21,18 @@ module.exports = () => {
             }],
             '/chat/:id': [h.isAuthenticated, (req, res, next) => {
                 //Assert if ID exits
-                let getRoom = h.findRoomById(req.app.locals.chatrooms, req.params.id);
-                if (getRoom === undefined) {
-                    return next();
-                } else {
-                    res.render('chatroom', {
-                        "user": req.user,
-                        host: config.host,
-                        room: getRoom.room,
-                        roomId: getRoom.roomId
-                    });
-                }
+                h.findRoomById(req.params.id).then(room => {
+                    if (!room) {
+                        next();
+                    } else {
+                        res.render('chatroom', {
+                            "user": req.user,
+                            host: config.host,
+                            room: room.room,
+                            roomId: room.roomId
+                        });
+                    }
+                }).catch(err => logger.log('error', 'Erro getting room ' + err));
             }],
             '/auth/facebook': passport.authenticate('facebook'),
             '/auth/facebook/callback': passport.authenticate('facebook', {

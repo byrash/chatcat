@@ -5,6 +5,7 @@
 const router = require('express').Router();
 const db = require('../db');
 const crypto = require('crypto');
+const logger = require('../logger');
 
 // Registers Routes
 let _registerRoutes = (routes, method) => {
@@ -97,64 +98,112 @@ let randomHex = () => {
     return crypto.randomBytes(24).toString('hex');
 }
 
-let findRoomById = (allrooms, roomId) => {
-    return allrooms.find((element, index, array) => {
-        if (element.roomId === roomId) {
-            return true;
-        } else {
-            return false;
+let findRoomById = (roomId) => {
+    return db.roomsModel.findOne({"roomId": roomId}).exec();
+}
+
+let addUserToRoom = (data, socket, callback) => {
+
+    if (data) {
+        findRoomById(data.roomId).then(result => {
+
+            if (result) {
+                //Room exists already so add user
+                //Get the active user id
+                let userId = socket.request.session.passport.user;
+                let checkUser = result.users.findIndex((element, index, array) => {
+                    if (element.userId === userId) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
+                if (checkUser > -1) {
+                    result.users.splice(checkUser, 1);
+                }
+                result.users.push({
+                    socketId: socket.id,
+                    userId,
+                    user: data.user,
+                    userPic: data.userPic
+                });
+                db.roomsModel.update({"roomId": data.roomId}, {$set: {"users": result.users}}, (err, updateResult) => {
+                    if (!err) {
+                        socket.join(data.roomId);
+                        callback(data.roomId, socket, result.users);
+                    } else {
+                        logger.log('error', 'Error saving users --> ' + err)
+                    }
+                });
+            }
+
+        }).catch(err => logger.log('error', 'Error finding room ' + err));
+    }
+}
+
+
+let getAllRooms = () => {
+    return db.roomsModel.find({}).exec();
+}
+
+let removeUserFromRoom = (socket, callback) => {
+
+    getAllRooms().then(results => {
+
+        for (let room of results) {
+
+            let findUser = room.users.findIndex((element, index, array) => {
+                if (element.socketId === socket.id) {
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+
+            if (findUser > -1) {
+                socket.leave(room.roomId);
+                room.users.splice(findUser, 1);
+
+                db.roomsModel.update({"room": room.room}, {$set: {"users": room.users}}, (err, raw) => {
+                    if (!err) {
+                        callback(room.roomId, socket, room.users);
+                    } else {
+                        logger.log('error', 'Failed to update user list ' + err);
+                    }
+                });
+
+            }
+
+        }
+
+    }).catch(err => logger.log('error', 'Error getting rooms ' + err));
+
+}
+
+let addNewRoom = (newRoomIn, socket, callback) => {
+    let roomInDB = db.roomsModel.findOne({"room": newRoomIn}, (err, results) => {
+        if (err) {
+            logger.log('error', 'Error finding room --> ' + err);
+        } else if (!results) {
+            //Room Does not exists
+            //Create a new one
+            let newRoom = new db.roomsModel({
+                room: newRoomIn,
+                roomId: randomHex(),
+                users: []
+            });
+            newRoom.save(err => {
+                if (!err) {
+                    logger.log('info', 'New room saved succesfully..!!! ');
+                    getAllRooms().then(results => {
+                        callback(socket, results)
+                    }).catch(err => logger.log('error', 'Unable to get all rooms ' + err));
+                } else {
+                    logger.log('error', 'New room not saved..!!! ');
+                }
+            });
         }
     });
-}
-
-let addUserToRoom = (allrooms, data, socket) => {
-
-    let getRoom = findRoomById(allrooms, data.roomId);
-
-    if (getRoom !== undefined) {
-        //Get the active user id
-        let userId = socket.request.session.passport.user;
-        let checkUser = getRoom.users.findIndex((element, index, array) => {
-            if (element.userId === userId) {
-                return true;
-            } else {
-                return false;
-            }
-        });
-
-        if (checkUser > -1) {
-            getRoom.users.splice(checkUser, 1);
-        }
-
-        getRoom.users.push({
-            socketId: socket.id,
-            userId,
-            user: data.user,
-            userPic: data.userPic
-        });
-
-        socket.join(data.roomId);
-
-        return getRoom;
-    }
-}
-
-let removeUserFromRoom = (allrooms, socket) => {
-    for (let room of allrooms) {
-        let findUser = room.users.findIndex((element, index, array) => {
-            if (element.socketId === socket.id) {
-                return true;
-            } else {
-                return false;
-            }
-        });
-
-        if (findUser > -1) {
-            socket.leave(room.roomId);
-            room.users.splice(findUser, 1);
-            return room;
-        }
-    }
 }
 
 
@@ -168,5 +217,7 @@ module.exports = {
     randomHex,
     findRoomById,
     addUserToRoom,
-    removeUserFromRoom
+    removeUserFromRoom,
+    getAllRooms,
+    addNewRoom
 }
